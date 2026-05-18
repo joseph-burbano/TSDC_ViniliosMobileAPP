@@ -5,6 +5,8 @@ import com.uniandes.vinilos.database.toAlbum
 import com.uniandes.vinilos.database.toEntity
 import com.uniandes.vinilos.model.Album
 import com.uniandes.vinilos.model.CreateAlbumRequest
+import com.uniandes.vinilos.model.CreateTrackRequest
+import com.uniandes.vinilos.model.Track
 import com.uniandes.vinilos.network.NetworkServiceAdapter
 import com.uniandes.vinilos.network.VinilosApi
 
@@ -35,7 +37,19 @@ class AlbumRepository(
             Result.failure(e)
         }
     }
- 
+
+    suspend fun addTrackToAlbum(albumId: Int, request: CreateTrackRequest): Result<Track> {
+        return try {
+            val created = api.addTrackToAlbum(albumId, request)
+            // Invalidamos la caché para que la próxima lectura traiga el álbum
+            // con el nuevo track incluido en su lista.
+            dao.deleteAll()
+            Result.success(created)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private suspend fun fetchAndCache(): List<Album> {
         val albums = api.getAlbums().map { it.copy(releaseDate = it.releaseDate.take(4)) }
         dao.insertAll(albums.map { it.toEntity() })
