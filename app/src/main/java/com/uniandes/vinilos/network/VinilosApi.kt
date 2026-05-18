@@ -2,10 +2,12 @@ package com.uniandes.vinilos.network
 
 import com.uniandes.vinilos.model.Album
 import com.uniandes.vinilos.model.CreateAlbumRequest
+import com.uniandes.vinilos.model.CreateTrackRequest
 import com.uniandes.vinilos.model.Collector
 import com.uniandes.vinilos.model.Performer
 import com.uniandes.vinilos.model.PerformerPrize
 import com.uniandes.vinilos.model.Prize
+import com.uniandes.vinilos.model.Track
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -27,6 +29,12 @@ interface VinilosApi {
  
     @GET("albums/{id}")
     suspend fun getAlbum(@Path("id") id: Int): Album
+
+    @POST("albums/{albumId}/tracks")
+    suspend fun addTrackToAlbum(
+        @Path("albumId") albumId: Int,
+        @Body body: CreateTrackRequest
+    ): Track
 
     @GET("collectors")
     suspend fun getCollectors(): List<Collector>
