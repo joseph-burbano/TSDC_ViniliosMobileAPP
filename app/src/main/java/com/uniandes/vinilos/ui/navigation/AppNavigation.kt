@@ -55,11 +55,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.uniandes.vinilos.AppViewModel
 import com.uniandes.vinilos.model.UserRole
+import com.uniandes.vinilos.ui.albums.AddTrackScreen
 import com.uniandes.vinilos.ui.albums.AlbumDetailScreen
 import com.uniandes.vinilos.ui.albums.AlbumListScreen
 import com.uniandes.vinilos.ui.albums.AlbumViewModel
 import com.uniandes.vinilos.ui.albums.CreateAlbumScreen
 import com.uniandes.vinilos.ui.albums.CreateAlbumViewModel
+import com.uniandes.vinilos.ui.albums.CreateTrackViewModel
 import com.uniandes.vinilos.ui.artists.ArtistDetailScreen
 import com.uniandes.vinilos.ui.artists.ArtistListScreen
 import com.uniandes.vinilos.ui.artists.ArtistViewModel
@@ -85,6 +87,9 @@ sealed class Screen(val route: String) {
         fun createRoute(albumId: Int) = "album_detail/$albumId"
     }
     object AlbumCreate : Screen("album_create")
+    object AlbumAddTrack : Screen("album_add_track/{albumId}") {
+        fun createRoute(albumId: Int) = "album_add_track/$albumId"
+    }
     object ArtistList : Screen("artist_list")
     object ArtistDetail : Screen("artist_detail/{artistId}") {
         fun createRoute(artistId: Int) = "artist_detail/$artistId"
@@ -134,6 +139,7 @@ fun AppNavigation(
     val collectorViewModel: CollectorViewModel = viewModel(factory = CollectorViewModel.factory(context))
     val prizeViewModel: PrizeViewModel = viewModel(factory = PrizeViewModel.factory(context))
     val createAlbumViewModel: CreateAlbumViewModel = viewModel(factory = CreateAlbumViewModel.factory(context))
+    val createTrackViewModel: CreateTrackViewModel = viewModel(factory = CreateTrackViewModel.factory(context))
     val favoritePerformersViewModel: FavoritePerformersViewModel = viewModel(factory = FavoritePerformersViewModel.factory(context))
 
     val isDetailScreen = currentRoute?.startsWith("album_detail") == true ||
@@ -142,7 +148,8 @@ fun AppNavigation(
             currentRoute?.startsWith("favorite_performers") == true ||
             currentRoute?.startsWith("prize_associate") == true
 
-    val isCreateScreen = currentRoute == Screen.AlbumCreate.route
+    val isCreateScreen = currentRoute == Screen.AlbumCreate.route ||
+            currentRoute?.startsWith("album_add_track") == true
 
     var isBarVisible by remember { mutableStateOf(true) }
 
@@ -307,7 +314,27 @@ fun AppNavigation(
                         viewModel = albumViewModel,
                         onBack = { navController.navigateUp() },
                         onMenuClick = onMenuClick,
-                        userRole = userRole 
+                        onAddTrack = {
+                            navController.navigate(Screen.AlbumAddTrack.createRoute(it))
+                        },
+                        userRole = userRole
+                    )
+                }
+                composable(
+                    route = Screen.AlbumAddTrack.route,
+                    arguments = listOf(navArgument("albumId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val albumId = backStackEntry.arguments?.getInt("albumId") ?: return@composable
+                    val album = albumViewModel.findById(albumId)
+                    AddTrackScreen(
+                        albumId = albumId,
+                        albumName = album?.name ?: "este álbum",
+                        viewModel = createTrackViewModel,
+                        onSuccess = {
+                            albumViewModel.refresh()
+                            navController.popBackStack()
+                        },
+                        onDiscard = { navController.popBackStack() }
                     )
                 }
                 composable(Screen.ArtistList.route) {
