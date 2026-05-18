@@ -3,6 +3,7 @@ package com.uniandes.vinilos.repository
 import com.uniandes.vinilos.database.dao.AlbumDao
 import com.uniandes.vinilos.database.entities.AlbumEntity
 import com.uniandes.vinilos.model.Album
+import com.uniandes.vinilos.model.CreateTrackRequest
 import com.uniandes.vinilos.model.Performer
 import com.uniandes.vinilos.model.Track
 import com.uniandes.vinilos.network.VinilosApi
@@ -106,6 +107,35 @@ class AlbumRepositoryTest {
             kotlinx.coroutines.runBlocking { repository.getAlbums() }
         }
         assertEquals("sin red", thrown.message)
+    }
+
+    // ─── HU08 — addTrackToAlbum ───────────────────────────────────────────────
+
+    @Test
+    fun `addTrackToAlbum llama al API, invalida la cache y devuelve Success`() = runTest {
+        val request = CreateTrackRequest(name = "So What", duration = "9:22")
+        val created = Track(id = 101, name = "So What", duration = "9:22")
+        coEvery { api.addTrackToAlbum(7, request) } returns created
+
+        val result = repository.addTrackToAlbum(7, request)
+
+        assertTrue(result.isSuccess)
+        assertEquals(101, result.getOrNull()?.id)
+        coVerify(exactly = 1) { api.addTrackToAlbum(7, request) }
+        coVerify(exactly = 1) { dao.deleteAll() }
+    }
+
+    @Test
+    fun `addTrackToAlbum devuelve Failure cuando el API lanza excepcion`() = runTest {
+        val request = CreateTrackRequest(name = "Track", duration = "3:00")
+        coEvery { api.addTrackToAlbum(7, request) } throws IOException("sin red")
+
+        val result = repository.addTrackToAlbum(7, request)
+
+        assertTrue(result.isFailure)
+        assertEquals("sin red", result.exceptionOrNull()?.message)
+        // No debe invalidar cache si la red falló
+        coVerify(exactly = 0) { dao.deleteAll() }
     }
 
     private companion object {
