@@ -1,12 +1,14 @@
 package com.uniandes.vinilos.ui.albums
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.uniandes.vinilos.model.Album
 import com.uniandes.vinilos.model.Performer
@@ -228,5 +230,130 @@ class AlbumDetailScreenInstrumentedTest {
         }
 
         composeTestRule.onNodeWithText("Poeta del pueblo").assertIsDisplayed()
+    }
+
+    // ─── HU08 - T7: Coleccionista ve el botón "AGREGAR" canción ──────────────
+
+    @Test
+    fun detailScreen_muestraBotonAgregarCancion_paraColeccionista() {
+        val viewModel = viewModelWith {
+            coEvery { getAlbums() } returns listOf(sampleAlbum)
+        }
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                AlbumDetailScreen(
+                    albumId = sampleAlbum.id,
+                    viewModel = viewModel,
+                    userRole = UserRole.COLLECTOR
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(AlbumDetailTestTags.SCREEN))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithTag(AlbumDetailTestTags.BTN_ADD_TRACK)
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    // ─── HU08 - T8: Visitante NO ve el botón "AGREGAR" canción ───────────────
+
+    @Test
+    fun detailScreen_ocultaBotonAgregarCancion_paraVisitante() {
+        val viewModel = viewModelWith {
+            coEvery { getAlbums() } returns listOf(sampleAlbum)
+        }
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                AlbumDetailScreen(
+                    albumId = sampleAlbum.id,
+                    viewModel = viewModel,
+                    userRole = UserRole.VISITOR
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(AlbumDetailTestTags.SCREEN))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule
+            .onAllNodes(hasTestTag(AlbumDetailTestTags.BTN_ADD_TRACK))
+            .fetchSemanticsNodes()
+            .let { assertTrue("El visitante no debe ver el botón AGREGAR", it.isEmpty()) }
+    }
+
+    // ─── HU08 - T9: Click en "AGREGAR" invoca callback onAddTrack(albumId) ───
+
+    @Test
+    fun detailScreen_clickEnAgregar_invocaOnAddTrackConElAlbumId() {
+        var addTrackForId: Int? = null
+        val viewModel = viewModelWith {
+            coEvery { getAlbums() } returns listOf(sampleAlbum)
+        }
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                AlbumDetailScreen(
+                    albumId = sampleAlbum.id,
+                    viewModel = viewModel,
+                    userRole = UserRole.COLLECTOR,
+                    onAddTrack = { addTrackForId = it }
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(AlbumDetailTestTags.SCREEN))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithTag(AlbumDetailTestTags.BTN_ADD_TRACK)
+            .performScrollTo()
+            .performClick()
+
+        assertTrue(addTrackForId == sampleAlbum.id)
+    }
+
+    // ─── HU08 - T10: Álbum sin canciones muestra empty-state al coleccionista
+
+    @Test
+    fun detailScreen_muestraEmptyState_cuandoAlbumNoTieneCancionesYRolCollector() {
+        val albumSinTracks = sampleAlbum.copy(tracks = emptyList())
+        val viewModel = viewModelWith {
+            coEvery { getAlbums() } returns listOf(albumSinTracks)
+        }
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                AlbumDetailScreen(
+                    albumId = albumSinTracks.id,
+                    viewModel = viewModel,
+                    userRole = UserRole.COLLECTOR
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(AlbumDetailTestTags.SCREEN))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithTag(AlbumDetailTestTags.TRACKS_EMPTY)
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag(AlbumDetailTestTags.BTN_ADD_TRACK)
+            .performScrollTo()
+            .assertIsDisplayed()
     }
 }
