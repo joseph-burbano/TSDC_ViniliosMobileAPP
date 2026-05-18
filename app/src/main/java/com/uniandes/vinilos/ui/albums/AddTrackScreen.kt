@@ -10,7 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -20,15 +20,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTrackScreen(
     albumId: Int,
     albumName: String,
-    viewModel: CreateTrackViewModel,
-    onSuccess: () -> Unit,
-    onDiscard: () -> Unit
+    viewModel: CreateTrackViewModel = viewModel(factory = CreateTrackViewModel.factory(LocalContext.current)),
+    onSuccess: () -> Unit = {},
+    onDiscard: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val name by viewModel.name.collectAsStateWithLifecycle()
@@ -46,7 +47,7 @@ fun AddTrackScreen(
 
     val backgroundColor = MaterialTheme.colorScheme.background
     val onBackground = MaterialTheme.colorScheme.onBackground
-    val accent = Color(0xFF8B2E1A)
+    val accent = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
