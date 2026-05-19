@@ -6,10 +6,11 @@ Feature: Asociar canción al álbum (HU08)
     Then I wait
     Then I ensure collector role
     Then I wait
-    Then I tap on element with accessibility id "nav_álbumes"
+    Then I tap on element with accessibility id "nav_albumes"
     Then I wait
     Then I wait
     Then I see the text "Álbumes"
+    Then I scroll down
     Then I scroll down
     Then I see the text "Buscando América"
     Then I tap on element with text containing "Buscando América"
@@ -42,10 +43,11 @@ Feature: Asociar canción al álbum (HU08)
     Then I wait
     Then I ensure collector role
     Then I wait
-    Then I tap on element with accessibility id "nav_álbumes"
+    Then I tap on element with accessibility id "nav_albumes"
     Then I wait
     Then I wait
     Then I see the text "Álbumes"
+    Then I scroll down
     Then I scroll down
     Then I see the text "Buscando América"
     Then I tap on element with text containing "Buscando América"

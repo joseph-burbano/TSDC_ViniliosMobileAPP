@@ -6,7 +6,7 @@ Feature: Crear álbum (HU07)
     Then I wait
     Then I ensure collector role
     Then I wait
-    Then I tap on element with accessibility id "nav_álbumes"
+    Then I tap on element with accessibility id "nav_albumes"
     Then I wait
     Then I wait
     Then I see the text "Álbumes"

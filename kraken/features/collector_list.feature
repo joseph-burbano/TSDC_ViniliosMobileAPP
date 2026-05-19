@@ -3,7 +3,7 @@ Feature: Listado de coleccionistas (HU05)
   Scenario: Como usuario visitante navego al listado de coleccionistas y veo el contenido
     Given I wait
     Then I select role if needed
-    Then I tap on element with accessibility id "nav_colecc."
+    Then I tap on element with accessibility id "nav_coleccionistas"
     Then I wait
     Then I wait
     Then I wait
@@ -18,7 +18,7 @@ Feature: Listado de coleccionistas (HU05)
   Scenario: Como usuario visitante busco un coleccionista por nombre y veo solo el resultado filtrado
     Given I wait
     Then I select role if needed
-    Then I tap on element with accessibility id "nav_colecc."
+    Then I tap on element with accessibility id "nav_coleccionistas"
     Then I wait
     Then I wait
     Then I wait
@@ -35,7 +35,7 @@ Feature: Listado de coleccionistas (HU05)
   Scenario: Como usuario visitante busco por artista favorito y veo el coleccionista correcto
     Given I wait
     Then I select role if needed
-    Then I tap on element with accessibility id "nav_colecc."
+    Then I tap on element with accessibility id "nav_coleccionistas"
     Then I wait
     Then I wait
     Then I wait

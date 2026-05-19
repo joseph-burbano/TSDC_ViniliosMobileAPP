@@ -3,7 +3,7 @@ Feature: Listado de álbumes (HU01)
   Scenario: Como usuario visitante navego al catálogo de álbumes y veo el contenido
     Given I wait
     Then I select role if needed
-    Then I tap on element with accessibility id "nav_álbumes"
+    Then I tap on element with accessibility id "nav_albumes"
     Then I wait
     Then I wait
     Then I wait

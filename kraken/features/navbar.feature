@@ -16,11 +16,11 @@ Feature: Navegación principal (ISSUE02)
     Then I wait
     Then I wait
     Then I see the text "Vinilos"
-    Then I tap on element with accessibility id "nav_álbumes"
+    Then I tap on element with accessibility id "nav_albumes"
     Then I wait
     Then I wait
     Then I see the text "Álbumes"
-    Then I tap on element with accessibility id "nav_colecc."
+    Then I tap on element with accessibility id "nav_coleccionistas"
     Then I wait
     Then I wait
     Then I see the text "colecc."

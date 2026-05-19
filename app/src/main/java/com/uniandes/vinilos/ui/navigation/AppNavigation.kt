@@ -109,12 +109,13 @@ sealed class Screen(val route: String) {
 enum class BottomNavItem(
     val route: String,
     val label: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val accessibilityId: String
 ) {
-    VINYL("home", "Vinilos", Icons.Filled.Home),
-    ALBUMES("album_list", "Álbumes", Icons.Filled.MusicNote),
-    ARTISTS("artist_list", "Artistas", Icons.Filled.Person),
-    PEOPLE("collector_list", "colecc.", Icons.Filled.AccountCircle)
+    VINYL("home", "Vinilos", Icons.Filled.Home, "nav_vinilos"),
+    ALBUMES("album_list", "Álbumes", Icons.Filled.MusicNote, "nav_albumes"),
+    ARTISTS("artist_list", "Artistas", Icons.Filled.Person, "nav_artistas"),
+    PEOPLE("collector_list", "colecc.", Icons.Filled.AccountCircle, "nav_coleccionistas")
 }
 
 @Composable
@@ -235,15 +236,15 @@ fun AppNavigation(
                                 label = { Text(item.label) },
                                 selected = currentRoute == item.route,
                                 modifier = Modifier.semantics {
-                                    contentDescription = "nav_${item.label.lowercase()}"
+                                    contentDescription = item.accessibilityId
                                 },
                                 onClick = {
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                            saveState = false
                                         }
                                         launchSingleTop = true
-                                        restoreState = true
+                                        restoreState = false
                                     }
                                 }
                             )
