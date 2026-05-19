@@ -133,11 +133,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_albums_row"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_albums_row").assertIsDisplayed()
         composeTestRule.onNodeWithText("Buscando América").assertIsDisplayed()
@@ -159,11 +155,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_consulted_artists_row"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_consulted_artists_row").assertExists()
     }
@@ -183,11 +175,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_recommended_artists_row"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_recommended_artists_row").assertExists()
     }
@@ -207,11 +195,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_collectors_row"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_collectors_row").assertExists()
         composeTestRule.onNodeWithTag("home_collector_100").assertExists()
@@ -237,11 +221,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_album_100"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_album_100").performClick()
         assert(clickedId == 100)
@@ -262,11 +242,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_collector_100"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_collector_100").assertExists()
         composeTestRule.onNodeWithTag("home_collector_101").assertExists()
@@ -287,11 +263,7 @@ class HomeScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_artist_101"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule
             .onAllNodes(hasTestTag("home_artist_101"))
@@ -323,11 +295,7 @@ class HomeScreenInstrumentedTest {
             .onFirst()
             .assertIsDisplayed()
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("home_albums_row"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("home_albums_row").assertIsDisplayed()
     }

@@ -4,6 +4,7 @@ Feature: Asociar premios a artistas (HU13)
   Scenario: Como visitante NO veo la opción de asociar premios en el detalle del artista
     Given I wait
     Then I select role if needed
+    Then I wait
     Then I tap on element with accessibility id "nav_artistas"
     Then I wait
     Then I wait
@@ -23,6 +24,7 @@ Feature: Asociar premios a artistas (HU13)
   Scenario: Como coleccionista veo la opción de asociar premios y puedo abrir el formulario
     Given I wait
     Then I select role if needed
+    Then I wait
     Then I tap on element with accessibility id "nav_artistas"
     Then I wait
     Then I wait

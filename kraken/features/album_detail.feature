@@ -4,7 +4,7 @@ Feature: Detalle de álbum (HU02)
     Given I wait
     Then I select role if needed
     Then I wait
-    Then I tap on element with accessibility id "nav_álbumes"
+    Then I tap on element with accessibility id "nav_albumes"
     Then I wait
     Then I wait
     Then I wait

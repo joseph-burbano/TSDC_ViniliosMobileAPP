@@ -215,15 +215,19 @@ class FavoritePerformersScreenInstrumentedTest {
             }
         }
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule
-                .onAllNodes(hasTestTag("${FavoritePerformersTestTags.TOGGLE_PREFIX}${sampleMusician.id}"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        // waitForIdle() avanza el reloj de Compose de forma controlada (frame a frame),
+        // evitando que el bucle de waitUntil sature la cola de buffers del GPU
+        // (dequeueBuffer ETIMEDOUT) y cause un SIGSEGV en el RenderThread al hacer teardown.
+        composeTestRule.waitForIdle()
 
         composeTestRule
             .onNodeWithTag("${FavoritePerformersTestTags.TOGGLE_PREFIX}${sampleMusician.id}")
+            .assertExists()
             .performClick()
+
+        // Deja que el reloj de Compose procese todas las animaciones pendientes
+        // (p.ej. el ripple del IconButton) antes de que el framework destruya la actividad.
+        composeTestRule.waitForIdle()
 
         verify(exactly = 1) { vm.toggleFavorite(sampleCollector.id, sampleMusician) }
     }
