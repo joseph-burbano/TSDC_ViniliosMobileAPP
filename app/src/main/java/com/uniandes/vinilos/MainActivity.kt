@@ -30,8 +30,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val isDarkTheme by appViewModel.isDarkTheme.collectAsStateWithLifecycle()
             val userRole by appViewModel.userRole.collectAsStateWithLifecycle()
+            val colorBlindMode by appViewModel.colorBlindMode.collectAsStateWithLifecycle()
 
-            VinilosTheme(darkTheme = isDarkTheme) {
+            VinilosTheme(darkTheme = isDarkTheme, colorBlindMode = colorBlindMode) {
                 AppNavigation(
                     appViewModel = appViewModel,
                     userRole = userRole

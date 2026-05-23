@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,18 +22,34 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.uniandes.vinilos.model.ColorBlindMode
 import com.uniandes.vinilos.model.UserRole
+
+object AppSettingsDrawerTestTags {
+    const val THEME_TOGGLE       = "drawer_theme_toggle"
+    const val COLOR_BLIND_TOGGLE = "drawer_color_blind_toggle"
+    const val ROLE_ACTION        = "drawer_role_action"
+}
 
 @Composable
 fun AppSettingsDrawer(
     userRole: UserRole?,
     isDarkTheme: Boolean,
+    colorBlindMode: ColorBlindMode = ColorBlindMode.NONE,
     onToggleTheme: () -> Unit,
+    onToggleColorBlind: () -> Unit = {},
     onBecomeCollector: () -> Unit,
     onLeaveCollector: () -> Unit,
     onCloseDrawer: () -> Unit
 ) {
+    val isDaltonic = colorBlindMode != ColorBlindMode.NONE
+    val themeLabel = if (isDarkTheme) "Cambiar a tema claro" else "Cambiar a tema oscuro"
+    val colorBlindLabel = if (isDaltonic) "Desactivar modo daltónico" else "Activar modo daltónico"
+
     ModalDrawerSheet(
         modifier = Modifier
             .fillMaxHeight()
@@ -45,7 +63,9 @@ fun AppSettingsDrawer(
             Text(
                 text = "Configuración",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
+                modifier = Modifier
+                    .padding(horizontal = 28.dp, vertical = 8.dp)
+                    .semantics { heading() }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -57,18 +77,37 @@ fun AppSettingsDrawer(
                 icon = {
                     Icon(
                         imageVector = if (isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                        contentDescription = null
+                        contentDescription = themeLabel
                     )
                 },
-                label = {
-                    Text(if (isDarkTheme) "Cambiar a tema claro" else "Cambiar a tema oscuro")
-                },
+                label = { Text(themeLabel) },
                 selected = false,
                 onClick = {
                     onToggleTheme()
                     onCloseDrawer()
                 },
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .testTag(AppSettingsDrawerTestTags.THEME_TOGGLE)
+            )
+
+            // Toggle daltonismo
+            NavigationDrawerItem(
+                icon = {
+                    Icon(
+                        imageVector = if (isDaltonic) Icons.Filled.Visibility else Icons.Filled.Contrast,
+                        contentDescription = colorBlindLabel
+                    )
+                },
+                label = { Text(colorBlindLabel) },
+                selected = isDaltonic,
+                onClick = {
+                    onToggleColorBlind()
+                    onCloseDrawer()
+                },
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .testTag(AppSettingsDrawerTestTags.COLOR_BLIND_TOGGLE)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -82,7 +121,7 @@ fun AppSettingsDrawer(
                         icon = {
                             Icon(
                                 imageVector = Icons.Filled.AccountCircle,
-                                contentDescription = null
+                                contentDescription = "Cambiar al rol de coleccionista"
                             )
                         },
                         label = { Text("Hacerse coleccionista") },
@@ -91,7 +130,9 @@ fun AppSettingsDrawer(
                             onBecomeCollector()
                             onCloseDrawer()
                         },
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .testTag(AppSettingsDrawerTestTags.ROLE_ACTION)
                     )
                 }
                 UserRole.COLLECTOR -> {
@@ -99,7 +140,7 @@ fun AppSettingsDrawer(
                         icon = {
                             Icon(
                                 imageVector = Icons.Filled.Logout,
-                                contentDescription = null
+                                contentDescription = "Salir del rol de coleccionista"
                             )
                         },
                         label = { Text("Salir del modo coleccionista") },
@@ -108,7 +149,9 @@ fun AppSettingsDrawer(
                             onLeaveCollector()
                             onCloseDrawer()
                         },
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .testTag(AppSettingsDrawerTestTags.ROLE_ACTION)
                     )
                 }
                 null -> Unit

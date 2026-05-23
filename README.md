@@ -200,20 +200,21 @@ Ubicación: `app/src/test/java/com/uniandes/vinilos/`.
 
 ### Qué cubren
 
-| Suite                        | Archivo                                         | Casos | Qué valida                                                                                                         |
-| ---------------------------- | ----------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
-| ArtistViewModelTest          | `ui/artists/ArtistViewModelTest.kt`             | 13    | Carga, paginación, refresh, errores, findById                                                                      |
-| ArtistViewModelDetailTest    | `ui/artists/ArtistViewModelDetailTest.kt`       | 5     | findById con álbumes, null, diferenciación                                                                         |
-| ArtistRepositoryTest         | `repository/ArtistRepositoryTest.kt`            | 4     | Cache-first (DAO → API), combina músicos y bandas, refresh borra y refetchea                                       |
-| AlbumRepositoryTest          | `repository/AlbumRepositoryTest.kt`             | 8     | Patrón cache-first, mapeo DTO → modelo, `releaseDate` ISO truncado al año, `refreshAlbums()`                       |
-| AlbumViewModelTest           | `ui/albums/AlbumViewModelTest.kt`               | 9     | Estados Loading/Success/Error, `IOException`, `HttpException`, refresh, `findById`                                 |
-| AlbumViewModelDetailTest     | `ui/albums/AlbumViewModelDetailTest.kt`         | 7     | findById con tracks, performers, null                                                                              |
-| CollectorViewModelTest       | `ui/collectors/CollectorViewModelTest.kt`       | 12    | Carga, paginación, refresh, errores, loadCollector                                                                 |
-| CollectorViewModelDetailTest | `ui/collectors/CollectorViewModelDetailTest.kt` | 7     | findById con álbumes, performers, null                                                                             |
-| CollectorRepositoryTest      | `repository/CollectorRepositoryTest.kt`         | 9     | Cache-first, `getCollector(id)` individual, refresh, excepciones del API, null si falla                            |
-| VinilosApiContractTest       | `network/VinilosApiContractTest.kt`             | 3     | Contrato HTTP `GET /albums` con MockWebServer                                                                      |
-| AppViewModelTest             | `ui/AppViewModelTest.kt`                        | 8     | userRole inicial null, setUserRole VISITOR/COLLECTOR, clearUserRole, isDarkTheme default, toggleDarkTheme, isReady |
-| ExampleUnitTest              | `ExampleUnitTest.kt`                            | 1     | Smoke del runner                                                                                                   |
+| Suite                        | Archivo                                         | Casos | Qué valida                                                                                                                         |
+| ---------------------------- | ----------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| ArtistViewModelTest          | `ui/artists/ArtistViewModelTest.kt`             | 13    | Carga, paginación, refresh, errores, findById                                                                                      |
+| ArtistViewModelDetailTest    | `ui/artists/ArtistViewModelDetailTest.kt`       | 5     | findById con álbumes, null, diferenciación                                                                                         |
+| ArtistRepositoryTest         | `repository/ArtistRepositoryTest.kt`            | 4     | Cache-first (DAO → API), combina músicos y bandas, refresh borra y refetchea                                                       |
+| AlbumRepositoryTest          | `repository/AlbumRepositoryTest.kt`             | 8     | Patrón cache-first, mapeo DTO → modelo, `releaseDate` ISO truncado al año, `refreshAlbums()`                                       |
+| AlbumViewModelTest           | `ui/albums/AlbumViewModelTest.kt`               | 9     | Estados Loading/Success/Error, `IOException`, `HttpException`, refresh, `findById`                                                 |
+| AlbumViewModelDetailTest     | `ui/albums/AlbumViewModelDetailTest.kt`         | 7     | findById con tracks, performers, null                                                                                              |
+| CollectorViewModelTest       | `ui/collectors/CollectorViewModelTest.kt`       | 12    | Carga, paginación, refresh, errores, loadCollector                                                                                 |
+| CollectorViewModelDetailTest | `ui/collectors/CollectorViewModelDetailTest.kt` | 7     | findById con álbumes, performers, null                                                                                             |
+| CollectorRepositoryTest      | `repository/CollectorRepositoryTest.kt`         | 9     | Cache-first, `getCollector(id)` individual, refresh, excepciones del API, null si falla                                            |
+| VinilosApiContractTest       | `network/VinilosApiContractTest.kt`             | 3     | Contrato HTTP `GET /albums` con MockWebServer                                                                                      |
+| AppViewModelTest             | `ui/AppViewModelTest.kt`                        | 8     | userRole inicial null, setUserRole VISITOR/COLLECTOR, clearUserRole, isDarkTheme default, toggleDarkTheme, isReady                 |
+| ExampleUnitTest              | `ExampleUnitTest.kt`                            | 1     | Smoke del runner                                                                                                                   |
+| CreateAlbumViewModelTest     | `ui/albums/CreateAlbumViewModelTest.kt`         | 11    | Estado inicial, validaciones de campos, construcción de fecha ISO, placeholder de cover, flujo exitoso, flujo de error, resetState |
 
 ### Cómo correrlas
 
@@ -258,6 +259,7 @@ Ubicación: `app/src/androidTest/java/com/uniandes/vinilos/`.
 | HU04    | ArtistDetailScreenInstrumentedTest    | 6     | Loading, nombre, discografía, botón volver, performer null, render con rol Collector                                                                                                                                                            |
 | HU05    | CollectorListScreenInstrumentedTest   | 14    | Loading, coleccionistas, artista favorito, error, navegación, búsqueda (nombre, case-insensitive, artista favorito, sin resultados, limpiar), paginación (visible, oculto, oculto al buscar), render con rol Collector                          |
 | HU06    | CollectorDetailScreenInstrumentedTest | 7     | Loading (isLoading=true), loading (collector null), nombre, stats, vault, botón volver, render con rol Collector                                                                                                                                |
+| HU07    | CreateAlbumScreenInstrumentedTest     | 6     | Elementos del formulario, validaciones al submit vacío, submit exitoso invoca onSuccess, botón descartar, error del repositorio, botón deshabilitado durante carga                                                                              |
 | ISSUE01 | HomeScreenInstrumentedTest            | 9     | Header, secciones álbumes/artistas/coleccionistas, navegación por click, coleccionistas en pantalla, artistas en pantalla, render con rol Collector                                                                                             |
 | ISSUE02 | (todos los anteriores)                | +7    | Parámetro userRole propagado a VinilosTopBar en todas las pantallas, tag top_bar_back_button en VinilosTopBar, un test \_conRolCollector por cada suite                                                                                         |
 
@@ -293,16 +295,17 @@ Pruebas de **caja negra** sobre el APK real, dirigidas con Cucumber + Kraken-Nod
 
 ### Qué cubren
 
-| HU      | Feature                   | Archivo                                    | Qué valida                                                                           |
-| ------- | ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
-| HU01    | Listado de álbumes        | `kraken/features/album_list.feature`       | Navegar al catálogo, ver el header y confirmar que un álbum aparece en la lista      |
-| HU02    | Detalle de álbum          | `kraken/features/album_detail.feature`     | Tap en un álbum, verificar género, secciones ARTISTAS y CANCIONES, volver con Volver |
-| HU03    | Listado de artistas       | `kraken/features/artist_list.feature`      | Navega al listado de artistas y verifica su contenido                                |
-| HU04    | Detalle de artista        | `kraken/features/artist_detail.feature`    | Tap en artista, ver secciones, volver                                                |
-| HU05    | Listado de coleccionistas | `kraken/features/collector_list.feature`   | Navegar al listado, ver header y coleccionista                                       |
-| HU06    | Detalle de coleccionista  | `kraken/features/collector_detail.feature` | Tap en coleccionista, ver ELITE CURATOR y The Vault, volver                          |
-| ISSUE01 | Página principal          | `kraken/features/home.feature`             | Header, últimos álbumes con scroll, navegación a detalle, sección coleccionistas     |
-| —       | Navegación principal      | `kraken/features/navbar.feature`           | Las 4 tabs son visibles y navegables                                                 |
+| HU      | Feature                   | Archivo                                    | Qué valida                                                                                                             |
+| ------- | ------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| HU01    | Listado de álbumes        | `kraken/features/album_list.feature`       | Navegar al catálogo, ver el header, contador de resultados y sección de artistas                                       |
+| HU02    | Detalle de álbum          | `kraken/features/album_detail.feature`     | Tap en un álbum, verificar género, secciones ARTISTAS y CANCIONES, volver con Volver                                   |
+| HU03    | Listado de artistas       | `kraken/features/artist_list.feature`      | Navega al listado de artistas y verifica su contenido                                                                  |
+| HU04    | Detalle de artista        | `kraken/features/artist_detail.feature`    | Tap en artista, ver secciones, volver                                                                                  |
+| HU05    | Listado de coleccionistas | `kraken/features/collector_list.feature`   | Navegar al listado, ver header y coleccionista                                                                         |
+| HU06    | Detalle de coleccionista  | `kraken/features/collector_detail.feature` | Tap en coleccionista, ver ELITE CURATOR y The Vault, volver                                                            |
+| HU07    | Crear álbum               | `kraken/features/create_album.feature`     | Cambio a rol Collector, FAB visible, formulario completo, submit y retorno al listado                                  |
+| ISSUE01 | Página principal          | `kraken/features/home.feature`             | Header, secciones ÚLTIMOS ÁLBUMES, ARTISTAS CONSULTADOS y COLECCIONISTAS sin depender de datos específicos del backend |
+| —       | Navegación principal      | `kraken/features/navbar.feature`           | Las 4 tabs son visibles y navegables                                                                                   |
 
 ### Setup inicial (una sola vez por máquina)
 
@@ -315,6 +318,15 @@ chmod +x setup.sh run.sh
 `setup.sh` instala dependencias Node, parchea `kraken-node` 1.0.24 para Appium 2.x e instala el server APK de UIAutomator2 en el device.
 
 ### Correr los tests
+
+> **Importante sobre datos del backend:** si los tests E2E usan el backend de Heroku
+> compartido con el curso. Si otros estudiantes han modificado los datos, algunos
+> features pueden fallar. Para garantizar datos limpios, usa el backend local:
+>
+> 1. `cd BackVynils && docker-compose down -v && docker-compose up -d`
+> 2. Cambia `Constants.BASE_URL` a `http://10.0.2.2:3000/` (emulador) o la IP local (device)
+> 3. Corre los tests
+> 4. Restaura `Constants.BASE_URL` al valor de Heroku antes del PR
 
 ```bash
 # 1. Backend arriba (en otra terminal, ver sección "Levantar el backend")
@@ -567,6 +579,13 @@ adb shell pm clear com.uniandes.vinilos
 ### Tests instrumentados: diálogo "Android App Compatibility / 16 KB"
 
 No es un error — la app corre en "page size compatible mode" por una dependencia de MockK. Toca **"Don't Show Again"** una vez y vuelve a correr la suite.
+
+### Kraken: features fallan porque los datos del backend cambiaron
+
+El backend de Heroku es compartido. Si otro estudiante agregó o eliminó álbumes,
+los features que verifican nombres específicos fallarán. Solución: resetea el
+backend local con `docker-compose down -v && docker-compose up -d` y apunta
+`Constants.BASE_URL` al backend local para los tests E2E.
 
 ### Kraken: "Cannot find module" o falla al conectar Appium
 

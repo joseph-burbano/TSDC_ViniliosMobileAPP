@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.uniandes.vinilos.model.Album
 import com.uniandes.vinilos.model.Performer
@@ -201,5 +202,92 @@ class ArtistDetailScreenInstrumentedTest {
         composeTestRule
             .onNodeWithTag(ArtistDetailTestTags.NAME)
             .assertIsDisplayed()
+    }
+
+    // ─── HU13 - T1: Sección GALARDONES visible para COLLECTOR ────────────────
+
+    @Test
+    fun detailScreen_muestraSeccionGalardones_paraCollector() {
+        val vm = mockViewModel()
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                ArtistDetailScreen(
+                    artistId = samplePerformer.id,
+                    viewModel = vm,
+                    userRole = UserRole.COLLECTOR
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(ArtistDetailTestTags.SCREEN))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule
+            .onNodeWithTag(ArtistDetailTestTags.PRIZES_SECTION)
+            .assertExists()
+        composeTestRule
+            .onNodeWithTag(ArtistDetailTestTags.PRIZES_CTA)
+            .assertExists()
+    }
+
+    // ─── HU13 - T2: Sección GALARDONES oculta para VISITOR ───────────────────
+
+    @Test
+    fun detailScreen_ocultaSeccionGalardones_paraVisitor() {
+        val vm = mockViewModel()
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                ArtistDetailScreen(
+                    artistId = samplePerformer.id,
+                    viewModel = vm,
+                    userRole = UserRole.VISITOR
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(ArtistDetailTestTags.SCREEN))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule
+            .onNodeWithTag(ArtistDetailTestTags.PRIZES_SECTION)
+            .assertDoesNotExist()
+    }
+
+    // ─── HU13 - T3: CTA Asociar premio invoca callback ───────────────────────
+
+    @Test
+    fun detailScreen_ctaAsociarPremio_invocaCallback() {
+        var navigatedToArtistId: Int? = null
+        val vm = mockViewModel()
+
+        composeTestRule.setContent {
+            VinilosTheme {
+                ArtistDetailScreen(
+                    artistId = samplePerformer.id,
+                    viewModel = vm,
+                    onAssociatePrize = { navigatedToArtistId = it },
+                    userRole = UserRole.COLLECTOR
+                )
+            }
+        }
+
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule
+                .onAllNodes(hasTestTag(ArtistDetailTestTags.PRIZES_CTA))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithTag(ArtistDetailTestTags.PRIZES_CTA)
+            .performScrollTo()
+            .performClick()
+        assertTrue(navigatedToArtistId == samplePerformer.id)
     }
 }

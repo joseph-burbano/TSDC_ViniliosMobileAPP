@@ -78,3 +78,65 @@ Then("I select role if needed", async function () {
     await elements[0].click();
   }
 });
+
+Then("I select role collector if needed", async function () {
+  const elements = await this.driver.$$(
+    `android=new UiSelector().textContains("Coleccionista")`,
+  );
+  if (elements.length > 0) {
+    await elements[0].click();
+  }
+});
+
+Then("I clear the text of element with id {string}", async function (id) {
+  const element = await this.driver.$(
+    `android=new UiSelector().resourceIdMatches(".*${id}.*")`,
+  );
+  await element.clearValue();
+});
+
+Then("I type {string} on element with id {string}", async function (text, id) {
+  const allEditTexts = await this.driver.$$(
+    `android=new UiSelector().className("android.widget.EditText")`,
+  );
+  const allContainers = await this.driver.$$(
+    `android=new UiSelector().descriptionContains("${id}")`,
+  );
+
+  if (allContainers.length === 0)
+    throw new Error(`No container found for id: ${id}`);
+
+  const boundsStr = await allContainers[0].getAttribute("bounds");
+  const match = boundsStr.match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
+  const [, x1, y1, x2, y2] = match.map(Number);
+
+  for (const editText of allEditTexts) {
+    const etBounds = await editText.getAttribute("bounds");
+    const etMatch = etBounds.match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
+    const [, ex1, ey1, ex2, ey2] = etMatch.map(Number);
+    const centerX = (ex1 + ex2) / 2;
+    const centerY = (ey1 + ey2) / 2;
+    if (centerX >= x1 && centerX <= x2 && centerY >= y1 && centerY <= y2) {
+      await editText.click();
+      await editText.setValue(text);
+      return;
+    }
+  }
+  throw new Error(`No EditText found within container: ${id}`);
+});
+
+Then("I ensure collector role", async function () {
+  const isCollector = await this.driver.$$(
+    `android=new UiSelector().textContains("Coleccionista")`,
+  );
+  if (isCollector.length > 0) return;
+
+  const menu = await this.driver.$(`~Abrir menú`);
+  await menu.click();
+  await this.driver.pause(1500);
+  const btn = await this.driver.$(
+    `android=new UiSelector().textContains("Hacerse coleccionista")`,
+  );
+  await btn.click();
+  await this.driver.pause(1500);
+});

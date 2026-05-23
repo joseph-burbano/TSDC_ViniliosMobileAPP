@@ -73,6 +73,71 @@ class VinilosApiContractTest {
         assertTrue(album.performers.isEmpty())
     }
 
+    // ─── HU-13: Contrato de premios ───────────────────────────────────────────
+
+    @Test
+    fun `getPrizes hace GET a la ruta prizes`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("[]"))
+
+        api.getPrizes()
+
+        val request = server.takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/prizes", request.path)
+    }
+
+    @Test
+    fun `getPrizes deserializa la lista`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody(SAMPLE_PRIZES_JSON))
+
+        val prizes = api.getPrizes()
+
+        assertEquals(2, prizes.size)
+        assertEquals("Grammy", prizes[0].name)
+        assertEquals("NARAS", prizes[0].organization)
+    }
+
+    @Test
+    fun `createPrize hace POST con el body y devuelve el premio creado`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody(CREATED_PRIZE_JSON))
+
+        val created = api.createPrize(
+            PrizeCreateBody(name = "Mercury", description = "UK", organization = "BPI")
+        )
+
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/prizes", request.path)
+        val body = request.body.readUtf8()
+        assertTrue(body.contains("\"name\":\"Mercury\""))
+        assertTrue(body.contains("\"organization\":\"BPI\""))
+        assertEquals(99, created.id)
+        assertEquals("Mercury", created.name)
+    }
+
+    @Test
+    fun `associatePrizeToMusician hace POST a la ruta musicians y manda la fecha`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody(ASSOCIATION_RESPONSE_JSON))
+
+        api.associatePrizeToMusician(7, 22, PerformerPrizeBody(premiationDate = "2024-05-01"))
+
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/prizes/7/musicians/22", request.path)
+        assertTrue(request.body.readUtf8().contains("\"premiationDate\":\"2024-05-01\""))
+    }
+
+    @Test
+    fun `associatePrizeToBand hace POST a la ruta bands`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody(ASSOCIATION_RESPONSE_JSON))
+
+        api.associatePrizeToBand(7, 33, PerformerPrizeBody(premiationDate = "1999-12-31"))
+
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/prizes/7/bands/33", request.path)
+    }
+
     private companion object {
         const val SAMPLE_ALBUMS_JSON = """
         [
@@ -109,6 +174,21 @@ class VinilosApiContractTest {
             "tracks": []
           }
         ]
+        """
+
+        const val SAMPLE_PRIZES_JSON = """
+        [
+          { "id": 1, "name": "Grammy", "description": "Music award", "organization": "NARAS" },
+          { "id": 2, "name": "Latin Grammy", "description": "Latin music award", "organization": "LARAS" }
+        ]
+        """
+
+        const val CREATED_PRIZE_JSON = """
+        { "id": 99, "name": "Mercury", "description": "UK", "organization": "BPI" }
+        """
+
+        const val ASSOCIATION_RESPONSE_JSON = """
+        { "id": 5, "premiationDate": "2024-05-01" }
         """
     }
 }

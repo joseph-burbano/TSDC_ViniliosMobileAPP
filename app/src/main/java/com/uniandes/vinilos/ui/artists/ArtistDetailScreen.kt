@@ -36,13 +36,15 @@ import com.uniandes.vinilos.ui.components.VinilosTopBar
 
 // ── TestTags ──────────────────────────────────────────────────────────────────
 object ArtistDetailTestTags {
-    const val SCREEN  = "artist_detail_screen"
-    const val LOADING = "loading_indicator"
-    const val NAME    = "artist_detail_name"
-    const val IMAGE   = "artist_detail_image"
-    const val ALBUMS  = "artist_detail_albums"
-    const val BACK    = "top_bar_back_button" 
-    const val STATS   = "artist_detail_stats"
+    const val SCREEN          = "artist_detail_screen"
+    const val LOADING         = "loading_indicator"
+    const val NAME            = "artist_detail_name"
+    const val IMAGE           = "artist_detail_image"
+    const val ALBUMS          = "artist_detail_albums"
+    const val BACK            = "top_bar_back_button"
+    const val STATS           = "artist_detail_stats"
+    const val PRIZES_SECTION  = "artist_detail_prizes_section"
+    const val PRIZES_CTA      = "artist_detail_prizes_cta"
 }
 
 // ── Pantalla principal ────────────────────────────────────────────────────────
@@ -52,7 +54,8 @@ fun ArtistDetailScreen(
     viewModel: ArtistViewModel,
     onBack: () -> Unit = {},
     onMenuClick: () -> Unit = {},
-    userRole: UserRole? = null 
+    onAssociatePrize: (Int) -> Unit = {},
+    userRole: UserRole? = null
 ) {
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val performer = viewModel.findById(artistId)
@@ -64,7 +67,8 @@ fun ArtistDetailScreen(
             performer = performer,
             onBack = onBack,
             onMenuClick = onMenuClick,
-            userRole = userRole  
+            onAssociatePrize = onAssociatePrize,
+            userRole = userRole
         )
     }
 }
@@ -88,6 +92,7 @@ private fun ArtistDetailContent(
         performer: Performer,
         onBack: () -> Unit,
         onMenuClick: () -> Unit,
+        onAssociatePrize: (Int) -> Unit = {},
         userRole: UserRole? = null
     ) {
     Scaffold(
@@ -116,6 +121,11 @@ private fun ArtistDetailContent(
             GenreChipsSection(albums = performer.albums)
             StatsSection(performer = performer)
             DiscographySection(albums = performer.albums)
+            if (userRole == UserRole.COLLECTOR) {
+                PrizesSection(
+                    onAssociatePrize = { onAssociatePrize(performer.id) }
+                )
+            }
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
@@ -336,6 +346,62 @@ private fun DiscographySection(albums: List<Album>) {
             items(albums) { album ->
                 AlbumCardSmall(album = album)
             }
+        }
+    }
+}
+
+// ── Sección 6: Galardones (HU-13) — sólo visible para COLLECTOR ───────────────
+@Composable
+private fun PrizesSection(onAssociatePrize: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp)
+            .testTag(ArtistDetailTestTags.PRIZES_SECTION)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 20.dp)
+        ) {
+            Text(
+                text = "LOS GALARDONES",
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Premios y Reconocimientos",
+                fontSize = 26.sp,
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Asocia un premio existente o crea uno nuevo para este artista.",
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onAssociatePrize,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .height(48.dp)
+                .testTag(ArtistDetailTestTags.PRIZES_CTA)
+        ) {
+            Text(
+                text = "Asociar premio",
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.sp
+            )
         }
     }
 }

@@ -2,6 +2,7 @@ package com.uniandes.vinilos
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uniandes.vinilos.model.ColorBlindMode
 import com.uniandes.vinilos.model.UserRole
 import com.uniandes.vinilos.repository.IPreferencesRepository
 import com.uniandes.vinilos.repository.PreferencesRepository
@@ -63,6 +64,19 @@ class AppViewModel @Inject constructor(
     fun toggleDarkTheme() {
         viewModelScope.launch {
             preferencesRepository.setDarkTheme(!isDarkTheme.value)
+        }
+    }
+
+    val colorBlindMode: StateFlow<ColorBlindMode> = preferencesRepository.colorBlindMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ColorBlindMode.NONE
+        )
+
+    fun setColorBlindMode(mode: ColorBlindMode) {
+        viewModelScope.launch {
+            preferencesRepository.setColorBlindMode(mode)
         }
     }
 }

@@ -12,5 +12,6 @@ data class PerformerEntity(
     val description: String,
     val birthDate: String? = null,
     val creationDate: String? = null,
-    val albums: List<Album> = emptyList()
+    val albums: List<Album> = emptyList(),
+    val type: String? = null
 )

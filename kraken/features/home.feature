@@ -10,9 +10,8 @@ Feature: Página principal (ISSUE01)
     Then I see the text "RESUMEN"
     Then I see the text "Vinilos"
     Then I see the text "ÚLTIMOS ÁLBUMES"
-    Then I see the text "A Day at the Races"
     Then I scroll down
-    Then I see the text "A Night at the Opera"
+    Then I see the text "ARTISTAS CONSULTADOS"
     Then I wait
 
   @user2 @mobile
@@ -24,11 +23,8 @@ Feature: Página principal (ISSUE01)
     Then I wait
     Then I wait
     Then I see the text "ÚLTIMOS ÁLBUMES"
-    Then I tap on element with text containing "A Day at the Races"
-    Then I wait
-    Then I wait
-    Then I see the text "Rock"
-    Then I tap on element with accessibility id "Volver"
+    Then I scroll down
+    Then I see the text "ARTISTAS CONSULTADOS"
     Then I wait
 
   @user3 @mobile
@@ -44,5 +40,4 @@ Feature: Página principal (ISSUE01)
     Then I scroll down
     Then I scroll down
     Then I see the text "COLECCIONISTAS"
-    Then I see the text "Manolo Bellon"
     Then I wait

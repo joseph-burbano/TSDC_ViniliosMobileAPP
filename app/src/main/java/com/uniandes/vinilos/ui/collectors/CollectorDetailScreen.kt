@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
@@ -34,7 +35,7 @@ import coil.request.ImageRequest
 import coil.size.Scale
 import com.uniandes.vinilos.model.Collector
 import com.uniandes.vinilos.model.CollectorAlbum
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.uniandes.vinilos.model.Performer
 import androidx.compose.runtime.LaunchedEffect
 import com.uniandes.vinilos.ui.components.VinilosTopBar
 import com.uniandes.vinilos.model.UserRole
@@ -58,13 +59,15 @@ fun CollectorDetailScreen(
     ),
     onBack: () -> Unit = {},
     onMenuClick: () -> Unit = {},
+    onAddFavoriteArtist: () -> Unit = {},
     userRole: UserRole? = null
 ) {
     LaunchedEffect(collectorId) {
         viewModel.loadCollector(collectorId)
     }
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val collector = viewModel.findById(collectorId)
+    val collectors by viewModel.collectors.collectAsStateWithLifecycle()
+    val collector = collectors.find { it.id == collectorId }
 
     if (isLoading || collector == null) {
         Box(
@@ -88,6 +91,23 @@ fun CollectorDetailScreen(
                 onMenuClick = onMenuClick,
                 userRole = userRole
             )
+        },
+        floatingActionButton = {
+            if (userRole == UserRole.COLLECTOR) {
+                FloatingActionButton(
+                    onClick = onAddFavoriteArtist,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Agregar artista favorito"
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Agregar artista favorito"
+                    )
+                }
+            }
         }
     ) { padding ->
         Column(
@@ -101,10 +121,16 @@ fun CollectorDetailScreen(
             Spacer(Modifier.height(24.dp))
             StatsSection(collector)
             Spacer(Modifier.height(32.dp))
+            FavoriteArtistsSection(
+                favorites = collector.favoritePerformers,
+                onAddFavoriteArtist = onAddFavoriteArtist,
+                userRole = userRole
+            )
+            Spacer(Modifier.height(32.dp))
             VaultSection(collector.collectorAlbums)
             Spacer(Modifier.height(24.dp))
             SeeMoreButton()
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(80.dp))
         }
     }
 }
@@ -375,3 +401,110 @@ private fun SeeMoreButton() {
         }
     }
 }
+
+@Composable
+private fun FavoriteArtistsSection(
+    favorites: List<Performer>,
+    onAddFavoriteArtist: () -> Unit,
+    userRole: UserRole?
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Artistas Favoritos",
+                fontSize = 28.sp,
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f)
+            )
+            if (userRole == UserRole.COLLECTOR) {
+                TextButton(onClick = onAddFavoriteArtist) {
+                    Text(
+                        "GESTIONAR",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Músicos y bandas que definen el gusto del coleccionista.",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.secondary,
+            lineHeight = 18.sp
+        )
+        Spacer(Modifier.height(16.dp))
+        if (favorites.isEmpty()) {
+            Text(
+                "Sin artistas favoritos todavía.",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        } else {
+            favorites.forEach { performer ->
+                FavoriteArtistChip(performer = performer)
+                Spacer(Modifier.height(10.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteArtistChip(performer: Performer) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = remember(performer.image) {
+                ImageRequest.Builder(context)
+                    .data(performer.image?.ifBlank { null })
+                    .crossfade(true)
+                    .scale(Scale.FILL)
+                    .build()
+            },
+            contentDescription = performer.name,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.tertiary)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = performer.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = if (performer.isMusician) "Músico" else "Banda",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+        Icon(
+            imageVector = Icons.Filled.Star,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+

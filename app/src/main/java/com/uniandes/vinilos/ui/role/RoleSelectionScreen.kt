@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.uniandes.vinilos.model.UserRole
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +37,8 @@ fun RoleSelectionScreen(
         Text(
             text = "Bienvenido a Vinilos",
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() }
         )
 
         Spacer(modifier = Modifier.height(8.dp))

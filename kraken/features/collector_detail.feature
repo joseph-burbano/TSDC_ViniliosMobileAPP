@@ -3,7 +3,7 @@ Feature: Detalle de coleccionista (HU06)
   Scenario: Como usuario visitante accedo al detalle de un coleccionista y veo su informacion
     Given I wait
     Then I select role if needed
-    Then I tap on element with accessibility id "nav_colecc."
+    Then I tap on element with accessibility id "nav_coleccionistas"
     Then I wait
     Then I wait
     Then I wait
@@ -23,7 +23,7 @@ Feature: Detalle de coleccionista (HU06)
   Scenario: Como usuario visitante puedo regresar desde el detalle al listado
     Given I wait
     Then I select role if needed
-    Then I tap on element with accessibility id "nav_colecc."
+    Then I tap on element with accessibility id "nav_coleccionistas"
     Then I wait
     Then I wait
     Then I wait

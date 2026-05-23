@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,7 @@ fun AlbumDetailScreen(
     viewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(LocalContext.current)),
     onBack: () -> Unit = {},
     onMenuClick: () -> Unit = {},
+    onAddTrack: (Int) -> Unit = {},
     userRole: UserRole? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -201,28 +204,63 @@ fun AlbumDetailScreen(
                     }
                 }
 
-                if (album.tracks.isNotEmpty()) {
+                val isCollector = userRole == UserRole.COLLECTOR
+                if (album.tracks.isNotEmpty() || isCollector) {
                     Spacer(modifier = Modifier.height(24.dp))
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "CANCIONES",
-                        fontSize = 11.sp,
-                        letterSpacing = 2.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "CANCIONES",
+                            fontSize = 11.sp,
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        if (isCollector) {
+                            TextButton(
+                                onClick = { onAddTrack(albumId) },
+                                modifier = Modifier
+                                    .testTag(AlbumDetailTestTags.BTN_ADD_TRACK)
+                                    .semantics { contentDescription = AlbumDetailTestTags.BTN_ADD_TRACK }
+                            ) {
+                                Text(
+                                    text = "+ AGREGAR",
+                                    fontSize = 11.sp,
+                                    letterSpacing = 1.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    album.tracks.forEachIndexed { index, track ->
-                        TrackRow(index = index + 1, track = track)
-                        if (index < album.tracks.lastIndex) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 0.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                            )
+                    if (album.tracks.isEmpty()) {
+                        Text(
+                            text = "Aún no hay canciones asociadas a este álbum.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(vertical = 12.dp)
+                                .testTag(AlbumDetailTestTags.TRACKS_EMPTY)
+                        )
+                    } else {
+                        album.tracks.forEachIndexed { index, track ->
+                            TrackRow(index = index + 1, track = track)
+                            if (index < album.tracks.lastIndex) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 0.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                )
+                            }
                         }
                     }
                 }
@@ -261,9 +299,11 @@ private fun TrackRow(index: Int, track: Track) {
 }
 
 object AlbumDetailTestTags {
-    const val SCREEN  = "album_detail_screen"
-    const val LOADING = "album_detail_loading"
-    const val BACK    = "top_bar_back_button"
+    const val SCREEN         = "album_detail_screen"
+    const val LOADING        = "album_detail_loading"
+    const val BACK           = "top_bar_back_button"
+    const val BTN_ADD_TRACK  = "album_detail_btn_add_track"
+    const val TRACKS_EMPTY   = "album_detail_tracks_empty"
 }
 
 @Preview(showBackground = true, showSystemUi = true)

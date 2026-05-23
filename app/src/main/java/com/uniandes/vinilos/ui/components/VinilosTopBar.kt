@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.uniandes.vinilos.model.UserRole
 import androidx.compose.foundation.background
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun VinilosTopBar(
@@ -67,13 +69,15 @@ fun VinilosTopBar(
                 Text(
                     text = title,
                     fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.semantics { heading() }
                 )
             } else {
                 Text(
                     text = "Vinilos",
                     fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.semantics { heading() }
                 )
             }
             if (userRole != null) {

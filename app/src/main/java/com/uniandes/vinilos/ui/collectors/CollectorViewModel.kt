@@ -118,6 +118,25 @@ class CollectorViewModel(
         }
     }
 
+    /**
+     * Re-lee el coleccionista desde la caché Room (fuente de verdad) y reemplaza la
+     * entrada en memoria. Se llama silenciosamente al volver a la pantalla de detalle
+     * para reflejar cambios en los favoritos sin necesidad de llamar a la red.
+     */
+    fun refreshCollectorFromCache(id: Int) {
+        viewModelScope.launch {
+            try {
+                val collector = repository.getCollector(id)
+                if (collector != null) {
+                    _collectors.value = _collectors.value
+                        .filterNot { it.id == id } + collector
+                }
+            } catch (_: Exception) {
+                // Actualización silenciosa de fondo; no sobreescribir errores visibles
+            }
+        }
+    }
+
     fun findById(collectorId: Int): Collector? =
         _collectors.value.find { it.id == collectorId }
 

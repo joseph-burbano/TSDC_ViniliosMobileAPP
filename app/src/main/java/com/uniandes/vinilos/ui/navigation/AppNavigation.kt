@@ -19,11 +19,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -52,16 +55,24 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.uniandes.vinilos.AppViewModel
 import com.uniandes.vinilos.model.UserRole
+import com.uniandes.vinilos.ui.albums.AddTrackScreen
 import com.uniandes.vinilos.ui.albums.AlbumDetailScreen
 import com.uniandes.vinilos.ui.albums.AlbumListScreen
 import com.uniandes.vinilos.ui.albums.AlbumViewModel
+import com.uniandes.vinilos.ui.albums.CreateAlbumScreen
+import com.uniandes.vinilos.ui.albums.CreateAlbumViewModel
+import com.uniandes.vinilos.ui.albums.CreateTrackViewModel
 import com.uniandes.vinilos.ui.artists.ArtistDetailScreen
 import com.uniandes.vinilos.ui.artists.ArtistListScreen
 import com.uniandes.vinilos.ui.artists.ArtistViewModel
 import com.uniandes.vinilos.ui.collectors.CollectorDetailScreen
 import com.uniandes.vinilos.ui.collectors.CollectorListScreen
 import com.uniandes.vinilos.ui.collectors.CollectorViewModel
+import com.uniandes.vinilos.ui.collectors.FavoritePerformersScreen
+import com.uniandes.vinilos.ui.collectors.FavoritePerformersViewModel
 import com.uniandes.vinilos.ui.home.HomeScreen
+import com.uniandes.vinilos.ui.prizes.PrizeAssociateScreen
+import com.uniandes.vinilos.ui.prizes.PrizeViewModel
 import com.uniandes.vinilos.ui.role.RoleSelectionScreen
 import com.uniandes.vinilos.ui.components.AppSettingsDrawer
 import kotlinx.coroutines.launch
@@ -75,6 +86,10 @@ sealed class Screen(val route: String) {
     object AlbumDetail : Screen("album_detail/{albumId}") {
         fun createRoute(albumId: Int) = "album_detail/$albumId"
     }
+    object AlbumCreate : Screen("album_create")
+    object AlbumAddTrack : Screen("album_add_track/{albumId}") {
+        fun createRoute(albumId: Int) = "album_add_track/$albumId"
+    }
     object ArtistList : Screen("artist_list")
     object ArtistDetail : Screen("artist_detail/{artistId}") {
         fun createRoute(artistId: Int) = "artist_detail/$artistId"
@@ -83,17 +98,24 @@ sealed class Screen(val route: String) {
     object CollectorDetail : Screen("collector_detail/{collectorId}") {
         fun createRoute(collectorId: Int) = "collector_detail/$collectorId"
     }
+    object FavoritePerformers : Screen("favorite_performers/{collectorId}") {
+        fun createRoute(collectorId: Int) = "favorite_performers/$collectorId"
+    }
+    object PrizeAssociate : Screen("prize_associate/{artistId}") {
+        fun createRoute(artistId: Int) = "prize_associate/$artistId"
+    }
 }
 
 enum class BottomNavItem(
     val route: String,
     val label: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val accessibilityId: String
 ) {
-    VINYL("home", "Vinilos", Icons.Filled.Home),
-    ALBUMES("album_list", "Álbumes", Icons.Filled.MusicNote),
-    ARTISTS("artist_list", "Artistas", Icons.Filled.Person),
-    PEOPLE("collector_list", "colecc.", Icons.Filled.AccountCircle)
+    VINYL("home", "Vinilos", Icons.Filled.Home, "nav_vinilos"),
+    ALBUMES("album_list", "Álbumes", Icons.Filled.MusicNote, "nav_albumes"),
+    ARTISTS("artist_list", "Artistas", Icons.Filled.Person, "nav_artistas"),
+    PEOPLE("collector_list", "colecc.", Icons.Filled.AccountCircle, "nav_coleccionistas")
 }
 
 @Composable
@@ -104,6 +126,7 @@ fun AppNavigation(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val isDarkTheme by appViewModel.isDarkTheme.collectAsStateWithLifecycle()
+    val colorBlindMode by appViewModel.colorBlindMode.collectAsStateWithLifecycle()
     
     val onMenuClick: () -> Unit = { scope.launch { drawerState.open() } }
 
@@ -115,10 +138,19 @@ fun AppNavigation(
     val albumViewModel: AlbumViewModel = viewModel(factory = AlbumViewModel.factory(context))
     val artistViewModel: ArtistViewModel = viewModel(factory = ArtistViewModel.factory(context))
     val collectorViewModel: CollectorViewModel = viewModel(factory = CollectorViewModel.factory(context))
+    val prizeViewModel: PrizeViewModel = viewModel(factory = PrizeViewModel.factory(context))
+    val createAlbumViewModel: CreateAlbumViewModel = viewModel(factory = CreateAlbumViewModel.factory(context))
+    val createTrackViewModel: CreateTrackViewModel = viewModel(factory = CreateTrackViewModel.factory(context))
+    val favoritePerformersViewModel: FavoritePerformersViewModel = viewModel(factory = FavoritePerformersViewModel.factory(context))
 
     val isDetailScreen = currentRoute?.startsWith("album_detail") == true ||
             currentRoute?.startsWith("artist_detail") == true ||
-            currentRoute?.startsWith("collector_detail") == true
+            currentRoute?.startsWith("collector_detail") == true ||
+            currentRoute?.startsWith("favorite_performers") == true ||
+            currentRoute?.startsWith("prize_associate") == true
+
+    val isCreateScreen = currentRoute == Screen.AlbumCreate.route ||
+            currentRoute?.startsWith("album_add_track") == true
 
     var isBarVisible by remember { mutableStateOf(true) }
 
@@ -127,7 +159,8 @@ fun AppNavigation(
     val offsetY = remember { Animatable(0f) }
 
     LaunchedEffect(currentRoute) {
-        if (!isDetailScreen) isBarVisible = true
+        if (!isDetailScreen && !isCreateScreen) isBarVisible = true
+        if (isCreateScreen) isBarVisible = false
     }
 
     LaunchedEffect(isBarVisible) {
@@ -166,7 +199,15 @@ fun AppNavigation(
             AppSettingsDrawer(
                 userRole = userRole,
                 isDarkTheme = isDarkTheme,
+                colorBlindMode = colorBlindMode,
                 onToggleTheme = { appViewModel.toggleDarkTheme() },
+                onToggleColorBlind = {
+                    val next = if (colorBlindMode == com.uniandes.vinilos.model.ColorBlindMode.NONE)
+                        com.uniandes.vinilos.model.ColorBlindMode.DEUTERANOPIA
+                    else
+                        com.uniandes.vinilos.model.ColorBlindMode.NONE
+                    appViewModel.setColorBlindMode(next)
+                },
                 onBecomeCollector = { appViewModel.setUserRole(UserRole.COLLECTOR) },
                 onLeaveCollector = { appViewModel.setUserRole(UserRole.VISITOR) },
                 onCloseDrawer = { scope.launch { drawerState.close() } }
@@ -195,15 +236,15 @@ fun AppNavigation(
                                 label = { Text(item.label) },
                                 selected = currentRoute == item.route,
                                 modifier = Modifier.semantics {
-                                    contentDescription = "nav_${item.label.lowercase()}"
+                                    contentDescription = item.accessibilityId
                                 },
                                 onClick = {
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                            saveState = false
                                         }
                                         launchSingleTop = true
-                                        restoreState = true
+                                        restoreState = false
                                     }
                                 }
                             )
@@ -248,7 +289,20 @@ fun AppNavigation(
                         viewModel = albumViewModel,
                         onAlbumClick = { navController.navigate(Screen.AlbumDetail.createRoute(it)) },
                         onMenuClick = onMenuClick,
-                        userRole = userRole 
+                        userRole = userRole,
+                        onCreateAlbum = {
+                            navController.navigate(Screen.AlbumCreate.route)
+                        }
+                    )
+                }
+                composable(Screen.AlbumCreate.route) {
+                    CreateAlbumScreen(
+                        viewModel = createAlbumViewModel,
+                        onSuccess = {
+                            albumViewModel.refresh()
+                            navController.popBackStack()
+                        },
+                        onDiscard = { navController.popBackStack() }
                     )
                 }
                 composable(
@@ -261,7 +315,27 @@ fun AppNavigation(
                         viewModel = albumViewModel,
                         onBack = { navController.navigateUp() },
                         onMenuClick = onMenuClick,
-                        userRole = userRole 
+                        onAddTrack = {
+                            navController.navigate(Screen.AlbumAddTrack.createRoute(it))
+                        },
+                        userRole = userRole
+                    )
+                }
+                composable(
+                    route = Screen.AlbumAddTrack.route,
+                    arguments = listOf(navArgument("albumId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val albumId = backStackEntry.arguments?.getInt("albumId") ?: return@composable
+                    val album = albumViewModel.findById(albumId)
+                    AddTrackScreen(
+                        albumId = albumId,
+                        albumName = album?.name ?: "este álbum",
+                        viewModel = createTrackViewModel,
+                        onSuccess = {
+                            albumViewModel.refresh()
+                            navController.popBackStack()
+                        },
+                        onDiscard = { navController.popBackStack() }
                     )
                 }
                 composable(Screen.ArtistList.route) {
@@ -282,7 +356,24 @@ fun AppNavigation(
                         viewModel = artistViewModel,
                         onBack = { navController.navigateUp() },
                         onMenuClick = onMenuClick,
-                        userRole = userRole 
+                        onAssociatePrize = { id ->
+                            navController.navigate(Screen.PrizeAssociate.createRoute(id))
+                        },
+                        userRole = userRole
+                    )
+                }
+                composable(
+                    route = Screen.PrizeAssociate.route,
+                    arguments = listOf(navArgument("artistId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val artistId = backStackEntry.arguments?.getInt("artistId") ?: return@composable
+                    PrizeAssociateScreen(
+                        artist = artistViewModel.findById(artistId),
+                        viewModel = prizeViewModel,
+                        onBack = { navController.navigateUp() },
+                        onMenuClick = onMenuClick,
+                        onAssociated = { navController.navigateUp() },
+                        userRole = userRole
                     )
                 }
                 composable(Screen.CollectorList.route) {
@@ -298,12 +389,45 @@ fun AppNavigation(
                     arguments = listOf(navArgument("collectorId") { type = NavType.IntType })
                 ) { backStackEntry ->
                     val collectorId = backStackEntry.arguments?.getInt("collectorId") ?: return@composable
+
+                    // Cuando el usuario vuelve desde FavoritePerformersScreen, el
+                    // LaunchedEffect(collectorId) de la pantalla de detalle NO re-dispara
+                    // porque la clave no cambió. Este observer detecta que la entrada
+                    // vuelve a RESUMED (navegación hacia atrás incluida) y fuerza una
+                    // re-lectura desde Room, donde el repository ya dejó los favoritos
+                    // actualizados.
+                    DisposableEffect(backStackEntry) {
+                        val observer = LifecycleEventObserver { _, event ->
+                            if (event == Lifecycle.Event.ON_RESUME) {
+                                collectorViewModel.refreshCollectorFromCache(collectorId)
+                            }
+                        }
+                        backStackEntry.lifecycle.addObserver(observer)
+                        onDispose { backStackEntry.lifecycle.removeObserver(observer) }
+                    }
+
                     CollectorDetailScreen(
                         collectorId = collectorId,
                         viewModel = collectorViewModel,
                         onBack = { navController.navigateUp() },
                         onMenuClick = onMenuClick,
-                        userRole = userRole 
+                        userRole = userRole,
+                        onAddFavoriteArtist = {
+                            navController.navigate(Screen.FavoritePerformers.createRoute(collectorId))
+                        }
+                    )
+                }
+                composable(
+                    route = Screen.FavoritePerformers.route,
+                    arguments = listOf(navArgument("collectorId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val collectorId = backStackEntry.arguments?.getInt("collectorId") ?: return@composable
+                    FavoritePerformersScreen(
+                        collector = collectorViewModel.findById(collectorId),
+                        viewModel = favoritePerformersViewModel,
+                        onBack = { navController.navigateUp() },
+                        onMenuClick = onMenuClick,
+                        userRole = userRole
                     )
                 }
             }

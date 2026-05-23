@@ -129,16 +129,120 @@ class CollectorRepositoryTest {
         assertEquals("sin red", thrown.message)
     }
 
+    // ── addFavoritePerformer ──────────────────────────────────────────────────
+
+    @Test
+    fun `addFavoritePerformer llama al endpoint de musico y retorna el artista agregado`() = runTest {
+        coEvery { dao.findById(100) } returns MANOLO_ENTITY
+        coEvery { api.addFavoriteMusician(100, RUBEN_PERFORMER.id) } returns RUBEN_PERFORMER
+
+        val result = repository.addFavoritePerformer(100, RUBEN_PERFORMER)
+
+        assertEquals(RUBEN_PERFORMER.name, result.name)
+        coVerify(exactly = 1) { api.addFavoriteMusician(100, RUBEN_PERFORMER.id) }
+        coVerify(exactly = 0) { api.addFavoriteBand(any(), any()) }
+    }
+
+    @Test
+    fun `addFavoritePerformer llama al endpoint de banda cuando el performer es banda`() = runTest {
+        coEvery { dao.findById(100) } returns MANOLO_ENTITY
+        coEvery { api.addFavoriteBand(100, BEATLES_BAND.id) } returns BEATLES_BAND
+
+        repository.addFavoritePerformer(100, BEATLES_BAND)
+
+        coVerify(exactly = 1) { api.addFavoriteBand(100, BEATLES_BAND.id) }
+        coVerify(exactly = 0) { api.addFavoriteMusician(any(), any()) }
+    }
+
+    @Test
+    fun `addFavoritePerformer actualiza la cache de Room con el nuevo favorito`() = runTest {
+        coEvery { dao.findById(100) } returns MANOLO_ENTITY
+        coEvery { api.addFavoriteMusician(100, RUBEN_PERFORMER.id) } returns RUBEN_PERFORMER
+
+        repository.addFavoritePerformer(100, RUBEN_PERFORMER)
+
+        coVerify(exactly = 1) { dao.insertAll(match { entities ->
+            entities.any { it.id == 100 && it.favoritePerformers.any { p -> p.id == RUBEN_PERFORMER.id } }
+        }) }
+    }
+
+    // ── removeFavoritePerformer ───────────────────────────────────────────────
+
+    @Test
+    fun `removeFavoritePerformer llama al endpoint de musico y actualiza la cache`() = runTest {
+        val entityWithFavorite = MANOLO_ENTITY.copy(favoritePerformers = listOf(RUBEN_PERFORMER))
+        coEvery { dao.findById(100) } returns entityWithFavorite
+
+        repository.removeFavoritePerformer(100, RUBEN_PERFORMER)
+
+        coVerify(exactly = 1) { api.removeFavoriteMusician(100, RUBEN_PERFORMER.id) }
+        coVerify(exactly = 0) { api.removeFavoriteBand(any(), any()) }
+        coVerify(exactly = 1) { dao.insertAll(match { entities ->
+            entities.any { it.id == 100 && it.favoritePerformers.none { p -> p.id == RUBEN_PERFORMER.id } }
+        }) }
+    }
+
+    @Test
+    fun `removeFavoritePerformer llama al endpoint de banda cuando el performer es banda`() = runTest {
+        val entityWithBand = MANOLO_ENTITY.copy(favoritePerformers = listOf(BEATLES_BAND))
+        coEvery { dao.findById(100) } returns entityWithBand
+
+        repository.removeFavoritePerformer(100, BEATLES_BAND)
+
+        coVerify(exactly = 1) { api.removeFavoriteBand(100, BEATLES_BAND.id) }
+        coVerify(exactly = 0) { api.removeFavoriteMusician(any(), any()) }
+    }
+
+    // ── preservación de favoritos en refresh ──────────────────────────────────
+
+    @Test
+    fun `refreshCollectors preserva favoritePerformers locales cuando el API devuelve lista sin favoritos`() = runTest {
+        val entityWithFavorite = MANOLO_ENTITY.copy(favoritePerformers = listOf(RUBEN_PERFORMER))
+        coEvery { dao.getAll() } returns listOf(entityWithFavorite)
+        val remoteWithoutFavorites = MANOLO_REMOTE.copy(favoritePerformers = emptyList())
+        coEvery { api.getCollectors() } returns listOf(remoteWithoutFavorites)
+
+        val result = repository.refreshCollectors()
+
+        assertEquals(1, result.first().favoritePerformers.size)
+        assertEquals(RUBEN_PERFORMER.name, result.first().favoritePerformers.first().name)
+    }
+
+    @Test
+    fun `refreshCollectors no sobreescribe favoritos cuando el API los trae`() = runTest {
+        coEvery { dao.getAll() } returns listOf(MANOLO_ENTITY)
+        coEvery { api.getCollectors() } returns listOf(MANOLO_REMOTE)
+
+        val result = repository.refreshCollectors()
+
+        // MANOLO_REMOTE ya tiene favoritePerformers, deben respetarse
+        assertEquals(1, result.first().favoritePerformers.size)
+        assertEquals(RUBEN_PERFORMER.name, result.first().favoritePerformers.first().name)
+    }
+
     private companion object {
+        val RUBEN_PERFORMER = Performer(
+            id = 100,
+            name = "Rubén Blades Bellido de Luna",
+            image = "https://img/ruben.png",
+            description = "Cantante panameño",
+            birthDate = "1948-07-16",
+            type = "musician"
+        )
+        val BEATLES_BAND = Performer(
+            id = 200,
+            name = "The Beatles",
+            image = "https://img/beatles.png",
+            description = "Rock band",
+            creationDate = "1960-01-01",
+            type = "band"
+        )
         val MANOLO_REMOTE = Collector(
             id = 100,
             name = "Manolo Bellon",
             telephone = "3502457896",
             email = "manollo@caracol.com.co",
-            favoritePerformers = listOf(
-                Performer(100, "Rubén Blades Bellido de Luna", "https://img/ruben.png",
-                    "Cantante panameño", "1948-07-16")
-            )
+            favoritePerformers = listOf(RUBEN_PERFORMER)
         )
 
         val MANOLO_ENTITY = CollectorEntity(
